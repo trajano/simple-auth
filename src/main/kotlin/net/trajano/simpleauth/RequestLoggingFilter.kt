@@ -32,14 +32,14 @@ class RequestHeaderLoggingFilter {
     fun springSecurityFilterChain(http: ServerHttpSecurity): SecurityWebFilterChain {
         val redirectServerAuthenticationEntryPoint =
             RedirectServerAuthenticationEntryPoint("/login")
-        redirectServerAuthenticationEntryPoint.setRedirectStrategy(ForwardHeadersRedirectStrategy())
+        redirectServerAuthenticationEntryPoint.setRedirectStrategy(ForwardHeadersRedirectStrategy("/login"))
 
         val loginPageGeneratingWebFilter = LoginPageGeneratingWebFilter()
         loginPageGeneratingWebFilter.setFormLoginEnabled(true)
 
         http
-            .addFilterBefore(loginPageGeneratingWebFilter, SecurityWebFiltersOrder.LOGIN_PAGE_GENERATING)
-            .addFilterBefore(LogoutPageGeneratingWebFilter(), SecurityWebFiltersOrder.LOGOUT_PAGE_GENERATING)
+            .addFilterAt(loginPageGeneratingWebFilter, SecurityWebFiltersOrder.LOGIN_PAGE_GENERATING)
+            .addFilterAt(LogoutPageGeneratingWebFilter(), SecurityWebFiltersOrder.LOGOUT_PAGE_GENERATING)
 //            .addFilterBefore(
 //                { exchange, chain ->
 //                    val requestHeaders = exchange.request.headers
@@ -55,7 +55,6 @@ class RequestHeaderLoggingFilter {
             .authorizeExchange { exchanges ->
                 exchanges.pathMatchers(HttpMethod.GET, "/actuator/health").hasIpAddress("127.0.0.1")
             }
-            .authorizeExchange { exchanges -> exchanges.pathMatchers("/login").permitAll() }
             .authorizeExchange { exchanges -> exchanges.anyExchange().authenticated() }
             .httpBasic(withDefaults())
             .exceptionHandling {

@@ -7,7 +7,7 @@ import org.springframework.web.util.UriComponentsBuilder
 import reactor.core.publisher.Mono
 import java.net.URI
 
-class ForwardHeadersRedirectStrategy : ServerRedirectStrategy {
+class ForwardHeadersRedirectStrategy(val loginPage: String) : ServerRedirectStrategy {
     override fun sendRedirect(exchange: ServerWebExchange, location: URI): Mono<Void> =
         Mono.fromRunnable<Void> {
             val response = exchange.response
@@ -18,7 +18,7 @@ class ForwardHeadersRedirectStrategy : ServerRedirectStrategy {
         }
 
     private fun createLocation(exchange: ServerWebExchange, location: URI): URI {
-        val url = location.toASCIIString()
+        val url = if (location.toASCIIString().equals(loginPage) ) { "/" } else { location.toASCIIString() }
         if (url.startsWith("/")) {
             val context = exchange.request.path.contextPath().value()
             return UriComponentsBuilder.newInstance()
