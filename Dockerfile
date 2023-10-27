@@ -1,9 +1,9 @@
-FROM gradle AS build
+FROM --platform=$BUILDPLATFORM gradle AS build
 WORKDIR /w
 COPY . /w
 RUN gradle bootJar
 
-FROM amazoncorretto:17-alpine-jdk AS extract
+FROM --platform=$BUILDPLATFORM amazoncorretto:17-alpine-jdk AS extract
 WORKDIR /w
 COPY --from=build /w/build/libs/*.jar /w/app.jar
 RUN java -Djarmode=layertools -jar /w/app.jar extract
