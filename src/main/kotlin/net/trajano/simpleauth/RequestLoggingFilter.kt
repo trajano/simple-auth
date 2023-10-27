@@ -55,7 +55,7 @@ class RequestHeaderLoggingFilter {
             .authorizeExchange { exchanges ->
                 exchanges.pathMatchers(HttpMethod.GET, "/actuator/health").hasIpAddress("127.0.0.1")
             }
-//            .authorizeExchange { exchanges -> exchanges.pathMatchers("/login").permitAll() }
+            .authorizeExchange { exchanges -> exchanges.pathMatchers("/login").permitAll() }
             .authorizeExchange { exchanges -> exchanges.anyExchange().authenticated() }
             .httpBasic(withDefaults())
             .exceptionHandling {
