@@ -18,7 +18,7 @@ class ForwardHeadersRedirectStrategy(val loginPage: String) : ServerRedirectStra
         }
 
     private fun createLocation(exchange: ServerWebExchange, location: URI): URI {
-        val url = if (location.toASCIIString().equals(loginPage) ) { "/" } else { location.toASCIIString() }
+        val url = location.toASCIIString()
         if (url.startsWith("/")) {
             val context = exchange.request.path.contextPath().value()
             return UriComponentsBuilder.newInstance()
