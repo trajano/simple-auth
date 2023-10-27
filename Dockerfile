@@ -14,5 +14,6 @@ COPY --from=extract --link /w/snapshot-dependencies/ /w/
 COPY --from=extract --link /w/spring-boot-loader/ /w/
 COPY --from=extract --link /w/application/ /w/
 
+WORKDIR /w
 CMD [ "java", "org.springframework.boot.loader.JarLauncher" ]
 HEALTHCHECK CMD wget http://localhost:8080/actuator/health || exit 1
