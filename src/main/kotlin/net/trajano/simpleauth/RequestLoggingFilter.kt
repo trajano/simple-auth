@@ -11,6 +11,7 @@ import org.springframework.security.core.userdetails.MapReactiveUserDetailsServi
 import org.springframework.security.core.userdetails.User
 import org.springframework.security.web.server.SecurityWebFilterChain
 import org.springframework.security.web.server.authentication.RedirectServerAuthenticationEntryPoint
+import org.springframework.security.web.server.savedrequest.WebSessionServerRequestCache
 import org.springframework.security.web.server.ui.LoginPageGeneratingWebFilter
 import org.springframework.security.web.server.ui.LogoutPageGeneratingWebFilter
 import org.springframework.web.server.WebFilter
@@ -29,8 +30,13 @@ class RequestHeaderLoggingFilter {
 
     @Bean
     fun springSecurityFilterChain(http: ServerHttpSecurity): SecurityWebFilterChain {
+        val redirectServerAuthenticationEntryPoint =
+            RedirectServerAuthenticationEntryPoint("/login")
+        redirectServerAuthenticationEntryPoint.setRedirectStrategy(ForwardHeadersRedirectStrategy())
+
         val loginPageGeneratingWebFilter = LoginPageGeneratingWebFilter()
         loginPageGeneratingWebFilter.setFormLoginEnabled(true)
+
         http
             .addFilterBefore(loginPageGeneratingWebFilter, SecurityWebFiltersOrder.LOGIN_PAGE_GENERATING)
             .addFilterBefore(LogoutPageGeneratingWebFilter(), SecurityWebFiltersOrder.LOGOUT_PAGE_GENERATING)
@@ -52,11 +58,7 @@ class RequestHeaderLoggingFilter {
 //            .authorizeExchange { exchanges -> exchanges.pathMatchers("/login").permitAll() }
             .authorizeExchange { exchanges -> exchanges.anyExchange().authenticated() }
             .httpBasic(withDefaults())
-            .formLogin(withDefaults())
             .exceptionHandling {
-                val redirectServerAuthenticationEntryPoint =
-                    RedirectServerAuthenticationEntryPoint("/login")
-                redirectServerAuthenticationEntryPoint.setRedirectStrategy(ForwardHeadersRedirectStrategy())
                 it.authenticationEntryPoint(redirectServerAuthenticationEntryPoint)
             }
         return http.build()
