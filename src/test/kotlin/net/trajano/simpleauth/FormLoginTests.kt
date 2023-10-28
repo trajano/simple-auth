@@ -4,6 +4,7 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
+import org.springframework.boot.testcontainers.service.connection.ServiceConnection
 import org.springframework.context.ApplicationContext
 import org.springframework.http.MediaType
 import org.springframework.http.ResponseCookie
@@ -11,6 +12,7 @@ import org.springframework.security.authentication.UserDetailsRepositoryReactive
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
 import org.springframework.security.core.userdetails.ReactiveUserDetailsService
 import org.springframework.security.test.web.reactive.server.SecurityMockServerConfigurers
+import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.web.reactive.server.WebTestClient
 import org.springframework.util.LinkedMultiValueMap
 import org.springframework.util.MultiValueMap
@@ -19,14 +21,33 @@ import org.springframework.web.reactive.function.client.ClientRequest
 import org.springframework.web.reactive.function.client.ClientResponse
 import org.springframework.web.reactive.function.client.ExchangeFilterFunction
 import org.springframework.web.reactive.function.client.ExchangeFunction
+import org.testcontainers.containers.GenericContainer
+import org.testcontainers.junit.jupiter.Container
+import org.testcontainers.junit.jupiter.Testcontainers
+import org.testcontainers.utility.DockerImageName
 import reactor.core.publisher.Mono
 import reactor.test.StepVerifier
 
 
-@SpringBootTest
+@SpringBootTest(
+    properties = [
+        "spring.security.user.name=user",
+        "spring.security.user.password=user",
+        "spring.security.user.roles=user",
+    ]
+)
+@ActiveProfiles("test")
 //@ContextConfiguration(classes = [SecurityConfig::class])
 //@WebAppConfiguration
+@Testcontainers
 class FormLoginTests {
+    companion object {
+        @Container
+        @ServiceConnection
+        var redis = GenericContainer(DockerImageName.parse("redis").asCompatibleSubstituteFor("redis"))
+            .withExposedPorts(6379)
+
+    }
 
     @Autowired
     private lateinit var context: ApplicationContext
@@ -161,6 +182,7 @@ class FormLoginTests {
             .body(BodyInserters.fromFormData(authData))
             .exchange()
             .expectStatus().isSeeOther
+            .expectHeader().exists("traceparent")
             .expectHeader().location("https://trajano.net/visualizer")
 
 

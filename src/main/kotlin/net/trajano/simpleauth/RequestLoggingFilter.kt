@@ -1,7 +1,9 @@
 package net.trajano.simpleauth
 
+import io.micrometer.tracing.Tracer
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
+import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpMethod
 import org.springframework.security.authentication.UserDetailsRepositoryReactiveAuthenticationManager
 import org.springframework.security.config.Customizer.withDefaults
@@ -17,24 +19,28 @@ import org.springframework.security.web.server.savedrequest.WebSessionServerRequ
 import org.springframework.security.web.server.ui.LoginPageGeneratingWebFilter
 import org.springframework.security.web.server.ui.LogoutPageGeneratingWebFilter
 import org.springframework.session.data.redis.config.annotation.web.server.EnableRedisWebSession
+import org.springframework.web.server.ServerWebExchange
+import org.springframework.web.server.WebFilter
+import org.springframework.web.server.WebFilterChain
 
 @Configuration
-@EnableRedisWebSession
+//@EnableRedisWebSession
 class RequestHeaderLoggingFilter {
 
-    @Bean
-    fun userDetailsService() = MapReactiveUserDetailsService(
-        User.withDefaultPasswordEncoder()
-            .username("user")
-            .password("user")
-            .roles("USER")
-            .build()
-    )
+//    @Bean
+//    fun userDetailsService() = MapReactiveUserDetailsService(
+//        User.withDefaultPasswordEncoder()
+//            .username("user")
+//            .password("user")
+//            .roles("USER")
+//            .build()
+//    )
 
     @Bean
     fun springSecurityFilterChain(
         http: ServerHttpSecurity,
-        userDetailsService: ReactiveUserDetailsService
+        userDetailsService: ReactiveUserDetailsService,
+        tracer: Tracer
     ): SecurityWebFilterChain {
         val reactiveAuthenticationManager = UserDetailsRepositoryReactiveAuthenticationManager(userDetailsService)
 
@@ -56,6 +62,14 @@ class RequestHeaderLoggingFilter {
         return http
             .addFilterAt(loginPageGeneratingWebFilter, SecurityWebFiltersOrder.LOGIN_PAGE_GENERATING)
             .addFilterAt(LogoutPageGeneratingWebFilter(), SecurityWebFiltersOrder.LOGOUT_PAGE_GENERATING)
+            .addFilterBefore({ exchange, chain ->
+                val headers: HttpHeaders = exchange.response.headers
+                headers.add(
+                    "traceparent",
+                    "00-${tracer.currentSpan()!!.context().traceId()}-${tracer.currentSpan()!!.context().spanId()}-01"
+                )
+                chain.filter(exchange)
+            }, SecurityWebFiltersOrder.HTTP_HEADERS_WRITER)
             .authenticationManager(reactiveAuthenticationManager)
             .authorizeExchange { exchanges ->
                 exchanges.pathMatchers(HttpMethod.GET, "/actuator/health").hasIpAddress("127.0.0.1")
@@ -73,6 +87,22 @@ class RequestHeaderLoggingFilter {
             }
             .build()
     }
+
+
+//    /**
+//     * https://www.w3.org/TR/trace-context/
+//     */
+//    @Bean
+//    fun tracingContextWebFilter(tracer: Tracer) =
+//        WebFilter { exchange: ServerWebExchange, chain: WebFilterChain ->
+//            val headers: HttpHeaders = exchange.response.headers
+//            headers.add(
+//                "traceparent",
+//                "00-${tracer.currentSpan()!!.context().traceId()}-${tracer.currentSpan()!!.context().spanId()}-01"
+//            )
+//            chain.filter(exchange)
+//
+//        }
 
 //    @Bean
 //    fun logRequestHeaders(): WebFilter {
