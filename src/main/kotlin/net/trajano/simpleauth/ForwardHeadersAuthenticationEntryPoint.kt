@@ -5,7 +5,6 @@ import org.springframework.security.core.AuthenticationException
 import org.springframework.security.web.server.ServerAuthenticationEntryPoint
 import org.springframework.security.web.server.savedrequest.ServerRequestCache
 import org.springframework.web.server.ServerWebExchange
-import reactor.core.publisher.Mono
 import java.net.URI
 
 class ForwardHeadersAuthenticationEntryPoint : ServerAuthenticationEntryPoint {
@@ -17,8 +16,8 @@ class ForwardHeadersAuthenticationEntryPoint : ServerAuthenticationEntryPoint {
         this.requestCache = requestCache
     }
 
-    override fun commence(exchange: ServerWebExchange, ex: AuthenticationException?): Mono<Void> {
-        return requestCache
+    override fun commence(exchange: ServerWebExchange, ex: AuthenticationException?) =
+        requestCache
             .saveRequest(
                 exchange.mutate()
                     .request(
@@ -30,6 +29,6 @@ class ForwardHeadersAuthenticationEntryPoint : ServerAuthenticationEntryPoint {
                     .build()
             )
             .then(ForwardHeadersRedirectStrategy().sendRedirect(exchange, location))
-    }
+
 
 }
