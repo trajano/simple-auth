@@ -110,7 +110,7 @@ class FormLoginTests {
     }
 
     @Test
-    fun setup() {
+    fun `happy path`() {
         val cookieManager = CookieManager()
         this.rest = WebTestClient
             .bindToApplicationContext(this.context)
@@ -120,14 +120,16 @@ class FormLoginTests {
             .defaultHeaders {
                 it.accept = listOf(MediaType.TEXT_HTML)
                 it["x-forwarded-proto"] = "https"
+                it["x-forwarded-method"] = "GET"
                 it["x-forwarded-host"] = "trajano.net"
                 it["x-forwarded-port"] = "443"
+                it["x-forwarded-uri"] = "/visualizer"
             }
             .filter(cookieManager)
             .build()
             .mutateWith(SecurityMockServerConfigurers.csrf())
 
-        val accessProtectedPageResult = rest.get().uri("https://trajano.net/visualizer")
+        val accessProtectedPageResult = rest.get().uri("https://trajano.net/")
             .exchange()
             .expectStatus().is3xxRedirection
             .returnResult(String::class.java)
@@ -172,16 +174,18 @@ class FormLoginTests {
             // add Spring Security test Support
             .apply(SecurityMockServerConfigurers.springSecurity())
             .configureClient()
-            .filter(CookieManager())
-            .build()
-            .mutateWith(SecurityMockServerConfigurers.csrf())
-        val accessProtectedPageResult = rest.get().uri("https://trajano.net/visualizer")
-            .headers {
+            .defaultHeaders {
+                it["x-forwarded-method"] = "GET"
                 it["x-forwarded-proto"] = "https"
                 it["x-forwarded-host"] = "trajano.net"
                 it["x-forwarded-port"] = "443"
+                it["x-forwarded-uri"] = "/visualizer"
                 it.accept = listOf(MediaType.TEXT_HTML)
             }
+            .filter(CookieManager())
+            .build()
+            .mutateWith(SecurityMockServerConfigurers.csrf())
+        val accessProtectedPageResult = rest.get().uri("https://trajano.net/")
             .exchange()
             .expectStatus().is3xxRedirection
             .returnResult(String::class.java)
@@ -192,12 +196,6 @@ class FormLoginTests {
         }
 
         rest.get().uri("https://trajano.net/login")
-            .headers {
-                it["x-forwarded-proto"] = "https"
-                it["x-forwarded-host"] = "trajano.net"
-                it["x-forwarded-port"] = "443"
-                it.accept = listOf(MediaType.TEXT_HTML)
-            }
             .exchange()
             .expectStatus().isOk
 
@@ -208,11 +206,8 @@ class FormLoginTests {
         val badLoginResult = rest
             .mutateWith(SecurityMockServerConfigurers.csrf())
             .post()
+            .uri("https://trajano.net/login")
             .headers {
-                it["x-forwarded-proto"] = "https"
-                it["x-forwarded-host"] = "trajano.net"
-                it["x-forwarded-port"] = "443"
-                it.accept = listOf(MediaType.TEXT_HTML)
                 it.contentType = MediaType.APPLICATION_FORM_URLENCODED
             }
             .body(BodyInserters.fromFormData(authData))
@@ -221,14 +216,17 @@ class FormLoginTests {
             .returnResult(String::class.java)
         badLoginResult.assertWithDiagnostics {
             assertThat(badLoginResult.responseHeaders.location)
-                .hasPath("/login")
-                .isEqualTo("https://trajano.net/login?error")
+                .hasToString("https://trajano.net/login?error")
         }
 
     }
 
     internal class CookieManager : ExchangeFilterFunction {
         private val cookies: MutableMap<String, ResponseCookie> = HashMap()
+        fun dump() {
+            println(cookies)
+        }
+
         override fun filter(request: ClientRequest, next: ExchangeFunction): Mono<ClientResponse> {
             return next.exchange(withClientCookies(request)).doOnSuccess { response: ClientResponse ->
                 response.cookies().values.forEach(

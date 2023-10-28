@@ -37,7 +37,8 @@ class ForwardHeadersRedirectStrategy : ServerRedirectStrategy {
                 .host(exchange.request.headers["x-forwarded-host"]!![0])
                 .port(forwardedPort)
                 .path(context)
-                .path(url)
+                .path(location.path)
+                .query(location.query)
                 .build()
                 .toUri()
         }

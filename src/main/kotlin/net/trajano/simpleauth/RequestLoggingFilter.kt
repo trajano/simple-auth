@@ -10,9 +10,10 @@ import org.springframework.security.core.userdetails.MapReactiveUserDetailsServi
 import org.springframework.security.core.userdetails.ReactiveUserDetailsService
 import org.springframework.security.core.userdetails.User
 import org.springframework.security.web.server.SecurityWebFilterChain
-import org.springframework.security.web.server.authentication.RedirectServerAuthenticationEntryPoint
 import org.springframework.security.web.server.authentication.RedirectServerAuthenticationFailureHandler
 import org.springframework.security.web.server.authentication.RedirectServerAuthenticationSuccessHandler
+import org.springframework.security.web.server.savedrequest.CookieServerRequestCache
+import org.springframework.security.web.server.savedrequest.WebSessionServerRequestCache
 import org.springframework.security.web.server.ui.LoginPageGeneratingWebFilter
 import org.springframework.security.web.server.ui.LogoutPageGeneratingWebFilter
 
@@ -35,13 +36,14 @@ class RequestHeaderLoggingFilter {
     ): SecurityWebFilterChain {
         val reactiveAuthenticationManager = UserDetailsRepositoryReactiveAuthenticationManager(userDetailsService)
 
+        val requestCache = CookieServerRequestCache()
         val forwardHeadersRedirectStrategy = ForwardHeadersRedirectStrategy()
-        val redirectServerAuthenticationEntryPoint =
-            RedirectServerAuthenticationEntryPoint("/login")
-        redirectServerAuthenticationEntryPoint.setRedirectStrategy(forwardHeadersRedirectStrategy)
+        val authenticationEntryPoint =
+            ForwardHeadersAuthenticationEntryPoint("/login", requestCache)
 
         val authenticationSuccessHandler = RedirectServerAuthenticationSuccessHandler("/")
         authenticationSuccessHandler.setRedirectStrategy(forwardHeadersRedirectStrategy)
+        authenticationSuccessHandler.setRequestCache(requestCache)
 
         val authenticationFailureHandler = RedirectServerAuthenticationFailureHandler("/login?error")
         authenticationFailureHandler.setRedirectStrategy(forwardHeadersRedirectStrategy)
@@ -54,12 +56,15 @@ class RequestHeaderLoggingFilter {
             .addFilterAt(LogoutPageGeneratingWebFilter(), SecurityWebFiltersOrder.LOGOUT_PAGE_GENERATING)
             .authenticationManager(reactiveAuthenticationManager)
             .authorizeExchange { exchanges -> exchanges.anyExchange().authenticated() }
+            .requestCache {
+                it.requestCache(requestCache)
+            }
             .httpBasic(withDefaults())
             .formLogin {
                 it.authenticationFailureHandler(authenticationFailureHandler)
                 it.loginPage("/login")
                 it.authenticationSuccessHandler(authenticationSuccessHandler)
-                it.authenticationEntryPoint(redirectServerAuthenticationEntryPoint)
+                it.authenticationEntryPoint(authenticationEntryPoint)
             }
             .build()
     }
