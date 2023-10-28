@@ -36,7 +36,7 @@ class RequestHeaderLoggingFilter {
     ): SecurityWebFilterChain {
         val reactiveAuthenticationManager = UserDetailsRepositoryReactiveAuthenticationManager(userDetailsService)
 
-        val requestCache = CookieServerRequestCache()
+        val requestCache = WebSessionServerRequestCache()
         val forwardHeadersRedirectStrategy = ForwardHeadersRedirectStrategy()
         val authenticationEntryPoint =
             ForwardHeadersAuthenticationEntryPoint("/login", requestCache)
