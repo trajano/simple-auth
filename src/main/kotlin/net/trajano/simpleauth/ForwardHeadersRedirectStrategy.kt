@@ -7,9 +7,9 @@ import org.springframework.web.util.UriComponentsBuilder
 import reactor.core.publisher.Mono
 import java.net.URI
 
-class ForwardHeadersRedirectStrategy(val loginPage: String) : ServerRedirectStrategy {
+class ForwardHeadersRedirectStrategy : ServerRedirectStrategy {
     override fun sendRedirect(exchange: ServerWebExchange, location: URI): Mono<Void> =
-        Mono.fromRunnable<Void> {
+        Mono.fromRunnable {
             val response = exchange.response
             response.setStatusCode(HttpStatus.TEMPORARY_REDIRECT)
             val newLocation: URI = createLocation(exchange, location)
@@ -21,10 +21,21 @@ class ForwardHeadersRedirectStrategy(val loginPage: String) : ServerRedirectStra
         val url = location.toASCIIString()
         if (url.startsWith("/")) {
             val context = exchange.request.path.contextPath().value()
+            val forwardedProto = exchange.request.headers["x-forwarded-proto"]!![0]
+            var forwardedPort = exchange.request.headers["x-forwarded-port"]!![0]
+            when {
+                "https".equals(forwardedProto) && "443".equals(forwardedPort) -> {
+                    forwardedPort = null;
+                }
+
+                "http".equals(forwardedProto) && "80".equals(forwardedPort) -> {
+                    forwardedPort = null;
+                }
+            }
             return UriComponentsBuilder.newInstance()
-                .scheme(exchange.request.headers["x-forwarded-proto"]!![0])
+                .scheme(forwardedProto)
                 .host(exchange.request.headers["x-forwarded-host"]!![0])
-                .port(exchange.request.headers["x-forwarded-port"]!![0])
+                .port(forwardedPort)
                 .path(context)
                 .path(url)
                 .build()

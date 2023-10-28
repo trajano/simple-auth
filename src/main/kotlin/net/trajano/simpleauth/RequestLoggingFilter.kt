@@ -3,15 +3,16 @@ package net.trajano.simpleauth
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.http.HttpHeaders
-import org.springframework.http.HttpMethod
+import org.springframework.security.authentication.UserDetailsRepositoryReactiveAuthenticationManager
 import org.springframework.security.config.Customizer.withDefaults
 import org.springframework.security.config.web.server.SecurityWebFiltersOrder
 import org.springframework.security.config.web.server.ServerHttpSecurity
 import org.springframework.security.core.userdetails.MapReactiveUserDetailsService
+import org.springframework.security.core.userdetails.ReactiveUserDetailsService
 import org.springframework.security.core.userdetails.User
 import org.springframework.security.web.server.SecurityWebFilterChain
 import org.springframework.security.web.server.authentication.RedirectServerAuthenticationEntryPoint
-import org.springframework.security.web.server.savedrequest.WebSessionServerRequestCache
+import org.springframework.security.web.server.authentication.RedirectServerAuthenticationSuccessHandler
 import org.springframework.security.web.server.ui.LoginPageGeneratingWebFilter
 import org.springframework.security.web.server.ui.LogoutPageGeneratingWebFilter
 import org.springframework.web.server.WebFilter
@@ -29,54 +30,43 @@ class RequestHeaderLoggingFilter {
     )
 
     @Bean
-    fun springSecurityFilterChain(http: ServerHttpSecurity): SecurityWebFilterChain {
+    fun springSecurityFilterChain(
+        http: ServerHttpSecurity,
+        userDetailsService: ReactiveUserDetailsService
+    ): SecurityWebFilterChain {
+        val reactiveAuthenticationManager = UserDetailsRepositoryReactiveAuthenticationManager(userDetailsService)
+
+        val forwardHeadersRedirectStrategy = ForwardHeadersRedirectStrategy()
         val redirectServerAuthenticationEntryPoint =
             RedirectServerAuthenticationEntryPoint("/login")
-        redirectServerAuthenticationEntryPoint.setRedirectStrategy(ForwardHeadersRedirectStrategy("/login"))
+        redirectServerAuthenticationEntryPoint.setRedirectStrategy(forwardHeadersRedirectStrategy)
+
+        val authenticationSuccessHandler = RedirectServerAuthenticationSuccessHandler("/")
+        authenticationSuccessHandler.setRedirectStrategy(forwardHeadersRedirectStrategy)
 
         val loginPageGeneratingWebFilter = LoginPageGeneratingWebFilter()
         loginPageGeneratingWebFilter.setFormLoginEnabled(true)
 
-        http
+        return http
             .addFilterAt(loginPageGeneratingWebFilter, SecurityWebFiltersOrder.LOGIN_PAGE_GENERATING)
             .addFilterAt(LogoutPageGeneratingWebFilter(), SecurityWebFiltersOrder.LOGOUT_PAGE_GENERATING)
-//            .addFilterBefore(
-//                { exchange, chain ->
-//                    val requestHeaders = exchange.request.headers
-//                    logHeaders(requestHeaders)
-//                    print(exchange.request.sslInfo)
-//                    print(exchange.request.method)
-//                    print(exchange.request.uri)
-//                    print(exchange.request.remoteAddress)
-//                    chain.filter(exchange)
-//                },
-//                SecurityWebFiltersOrder.HTTPS_REDIRECT
-//            )
-            .authorizeExchange { exchanges ->
-                exchanges.pathMatchers(HttpMethod.GET, "/actuator/health").hasIpAddress("127.0.0.1")
-            }
+            .authenticationManager(reactiveAuthenticationManager)
             .authorizeExchange { exchanges -> exchanges.anyExchange().authenticated() }
             .httpBasic(withDefaults())
-            .exceptionHandling {
-                it.authenticationEntryPoint(redirectServerAuthenticationEntryPoint)
+            .formLogin {
+                it.loginPage("/login")
+                    .authenticationSuccessHandler(authenticationSuccessHandler)
+                    .authenticationEntryPoint(redirectServerAuthenticationEntryPoint)
             }
-        return http.build()
+            .build()
     }
 
-    @Bean
-    fun logRequestHeaders(): WebFilter {
-        return WebFilter { exchange, chain ->
-            val requestHeaders = exchange.request.headers
-            logHeaders(requestHeaders)
-            chain.filter(exchange)
-        }
-    }
-
-    private fun logHeaders(headers: HttpHeaders) {
-        headers.forEach { key, values ->
-            values.forEach { value ->
-                println("Request Header: $key = $value")
-            }
-        }
-    }
+//    @Bean
+//    fun logRequestHeaders(): WebFilter {
+//        return WebFilter { exchange, chain ->
+//            val requestHeaders = exchange.request.headers
+//            logHeaders(requestHeaders)
+//            chain.filter(exchange)
+//        }
+//    }
 }
