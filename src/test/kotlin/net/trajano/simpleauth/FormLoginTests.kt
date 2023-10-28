@@ -21,7 +21,6 @@ import org.springframework.web.reactive.function.client.ExchangeFilterFunction
 import org.springframework.web.reactive.function.client.ExchangeFunction
 import reactor.core.publisher.Mono
 import reactor.test.StepVerifier
-import java.util.function.Consumer
 
 
 @SpringBootTest
@@ -55,9 +54,9 @@ class FormLoginTests {
             .create(manager.authenticate(authentication)).expectNextMatches { it.isAuthenticated }
             .verifyComplete()
 
-        val badauthentication = UsernamePasswordAuthenticationToken("user", "bad-password")
+        val badAuthentication = UsernamePasswordAuthenticationToken("user", "bad-password")
         StepVerifier
-            .create(manager.authenticate(badauthentication))
+            .create(manager.authenticate(badAuthentication))
             .verifyError()
 
     }
@@ -223,38 +222,32 @@ class FormLoginTests {
 
     internal class CookieManager : ExchangeFilterFunction {
         private val cookies: MutableMap<String, ResponseCookie> = HashMap()
-        fun dump() {
-            println(cookies)
-        }
 
-        override fun filter(request: ClientRequest, next: ExchangeFunction): Mono<ClientResponse> {
-            return next.exchange(withClientCookies(request)).doOnSuccess { response: ClientResponse ->
-                response.cookies().values.forEach(
-                    Consumer { cookies: List<ResponseCookie> ->
-                        cookies.forEach(
-                            Consumer { cookie: ResponseCookie ->
-                                if (cookie.maxAge.isZero) {
-                                    this.cookies.remove(cookie.name)
-                                } else {
-                                    this.cookies[cookie.name] = cookie
-                                }
-                            })
-                    })
+        override fun filter(request: ClientRequest, next: ExchangeFunction): Mono<ClientResponse> =
+            next.exchange(withClientCookies(request)).doOnSuccess { response: ClientResponse ->
+                response.cookies().values.forEach { cookies ->
+                    cookies.forEach {
+                        if (it.maxAge.isZero) {
+                            this.cookies.remove(it.name)
+                        } else {
+                            this.cookies[it.name] = it
+                        }
+                    }
+                }
             }
-        }
 
-        private fun withClientCookies(request: ClientRequest): ClientRequest {
-            return ClientRequest.from(request).cookies { c -> c.addAll(clientCookies()) }.build()
-        }
+        private fun withClientCookies(request: ClientRequest): ClientRequest =
+            ClientRequest.from(request).cookies { it.addAll(clientCookies()) }.build()
+
 
         private fun clientCookies(): MultiValueMap<String, String> {
             val result: MultiValueMap<String, String> = LinkedMultiValueMap(cookies.size)
-            cookies.values.forEach(Consumer { cookie: ResponseCookie ->
+            cookies.values.forEach {
                 result.add(
-                    cookie.name,
-                    cookie.value
+                    it.name,
+                    it.value
                 )
-            })
+            }
             return result
         }
     }
