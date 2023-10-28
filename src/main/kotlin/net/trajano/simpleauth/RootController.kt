@@ -2,6 +2,7 @@ package net.trajano.simpleauth
 
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
+import org.springframework.session.data.redis.config.annotation.web.server.EnableRedisWebSession
 import org.springframework.stereotype.Controller
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.ResponseStatus

@@ -16,8 +16,10 @@ import org.springframework.security.web.server.authentication.RedirectServerAuth
 import org.springframework.security.web.server.savedrequest.WebSessionServerRequestCache
 import org.springframework.security.web.server.ui.LoginPageGeneratingWebFilter
 import org.springframework.security.web.server.ui.LogoutPageGeneratingWebFilter
+import org.springframework.session.data.redis.config.annotation.web.server.EnableRedisWebSession
 
 @Configuration
+@EnableRedisWebSession
 class RequestHeaderLoggingFilter {
 
     @Bean
