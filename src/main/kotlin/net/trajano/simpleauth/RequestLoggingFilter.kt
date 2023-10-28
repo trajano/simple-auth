@@ -2,6 +2,7 @@ package net.trajano.simpleauth
 
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
+import org.springframework.http.HttpMethod
 import org.springframework.security.authentication.UserDetailsRepositoryReactiveAuthenticationManager
 import org.springframework.security.config.Customizer.withDefaults
 import org.springframework.security.config.web.server.SecurityWebFiltersOrder
@@ -12,7 +13,6 @@ import org.springframework.security.core.userdetails.User
 import org.springframework.security.web.server.SecurityWebFilterChain
 import org.springframework.security.web.server.authentication.RedirectServerAuthenticationFailureHandler
 import org.springframework.security.web.server.authentication.RedirectServerAuthenticationSuccessHandler
-import org.springframework.security.web.server.savedrequest.CookieServerRequestCache
 import org.springframework.security.web.server.savedrequest.WebSessionServerRequestCache
 import org.springframework.security.web.server.ui.LoginPageGeneratingWebFilter
 import org.springframework.security.web.server.ui.LogoutPageGeneratingWebFilter
@@ -55,6 +55,9 @@ class RequestHeaderLoggingFilter {
             .addFilterAt(loginPageGeneratingWebFilter, SecurityWebFiltersOrder.LOGIN_PAGE_GENERATING)
             .addFilterAt(LogoutPageGeneratingWebFilter(), SecurityWebFiltersOrder.LOGOUT_PAGE_GENERATING)
             .authenticationManager(reactiveAuthenticationManager)
+            .authorizeExchange { exchanges ->
+                exchanges.pathMatchers(HttpMethod.GET, "/actuator/health").hasIpAddress("127.0.0.1")
+            }
             .authorizeExchange { exchanges -> exchanges.anyExchange().authenticated() }
             .requestCache {
                 it.requestCache(requestCache)
