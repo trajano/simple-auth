@@ -18,7 +18,6 @@ class ForwardHeadersAuthenticationEntryPoint : ServerAuthenticationEntryPoint {
     }
 
     override fun commence(exchange: ServerWebExchange, ex: AuthenticationException?): Mono<Void> {
-        ex?.printStackTrace()
         return requestCache
             .saveRequest(
                 exchange.mutate()
