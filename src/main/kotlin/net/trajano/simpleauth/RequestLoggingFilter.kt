@@ -2,7 +2,6 @@ package net.trajano.simpleauth
 
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
-import org.springframework.http.HttpHeaders
 import org.springframework.security.authentication.UserDetailsRepositoryReactiveAuthenticationManager
 import org.springframework.security.config.Customizer.withDefaults
 import org.springframework.security.config.web.server.SecurityWebFiltersOrder
@@ -12,10 +11,10 @@ import org.springframework.security.core.userdetails.ReactiveUserDetailsService
 import org.springframework.security.core.userdetails.User
 import org.springframework.security.web.server.SecurityWebFilterChain
 import org.springframework.security.web.server.authentication.RedirectServerAuthenticationEntryPoint
+import org.springframework.security.web.server.authentication.RedirectServerAuthenticationFailureHandler
 import org.springframework.security.web.server.authentication.RedirectServerAuthenticationSuccessHandler
 import org.springframework.security.web.server.ui.LoginPageGeneratingWebFilter
 import org.springframework.security.web.server.ui.LogoutPageGeneratingWebFilter
-import org.springframework.web.server.WebFilter
 
 @Configuration
 class RequestHeaderLoggingFilter {
@@ -44,6 +43,9 @@ class RequestHeaderLoggingFilter {
         val authenticationSuccessHandler = RedirectServerAuthenticationSuccessHandler("/")
         authenticationSuccessHandler.setRedirectStrategy(forwardHeadersRedirectStrategy)
 
+        val authenticationFailureHandler = RedirectServerAuthenticationFailureHandler("/login?error")
+        authenticationFailureHandler.setRedirectStrategy(forwardHeadersRedirectStrategy)
+
         val loginPageGeneratingWebFilter = LoginPageGeneratingWebFilter()
         loginPageGeneratingWebFilter.setFormLoginEnabled(true)
 
@@ -54,9 +56,10 @@ class RequestHeaderLoggingFilter {
             .authorizeExchange { exchanges -> exchanges.anyExchange().authenticated() }
             .httpBasic(withDefaults())
             .formLogin {
+                it.authenticationFailureHandler(authenticationFailureHandler)
                 it.loginPage("/login")
-                    .authenticationSuccessHandler(authenticationSuccessHandler)
-                    .authenticationEntryPoint(redirectServerAuthenticationEntryPoint)
+                it.authenticationSuccessHandler(authenticationSuccessHandler)
+                it.authenticationEntryPoint(redirectServerAuthenticationEntryPoint)
             }
             .build()
     }

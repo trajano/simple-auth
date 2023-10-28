@@ -11,7 +11,7 @@ class ForwardHeadersRedirectStrategy : ServerRedirectStrategy {
     override fun sendRedirect(exchange: ServerWebExchange, location: URI): Mono<Void> =
         Mono.fromRunnable {
             val response = exchange.response
-            response.setStatusCode(HttpStatus.TEMPORARY_REDIRECT)
+            response.setStatusCode(HttpStatus.SEE_OTHER)
             val newLocation: URI = createLocation(exchange, location)
             response.headers.location = newLocation
 

@@ -65,7 +65,6 @@ class FormLoginTests {
     @Test
     fun basic() {
         val cookieManager = CookieManager()
-        val csrf = SecurityMockServerConfigurers.csrf()
         this.rest = WebTestClient
             .bindToApplicationContext(this.context)
             // add Spring Security test Support
@@ -113,7 +112,6 @@ class FormLoginTests {
     @Test
     fun setup() {
         val cookieManager = CookieManager()
-        val csrf = SecurityMockServerConfigurers.csrf()
         this.rest = WebTestClient
             .bindToApplicationContext(this.context)
             // add Spring Security test Support
@@ -127,6 +125,8 @@ class FormLoginTests {
             }
             .filter(cookieManager)
             .build()
+            .mutateWith(SecurityMockServerConfigurers.csrf())
+
         val accessProtectedPageResult = rest.get().uri("https://trajano.net/visualizer")
             .exchange()
             .expectStatus().is3xxRedirection
@@ -140,14 +140,6 @@ class FormLoginTests {
 
         val loginPageResult = rest.get()
             .uri("https://trajano.net/login")
-//            .cookies { jar ->
-//                accessProtectedPageResult.responseCookies.values.forEach { cookie ->
-//                    jar.addAll(cookie)
-//                        cookie.key,
-//                        cookie.value.map { println(it)
-//                            it.value })
-//                }
-//            }
             .exchange()
             .expectStatus().isOk
             .returnResult(String::class.java)
@@ -155,29 +147,11 @@ class FormLoginTests {
             assertThat(loginPageResult.responseBodyContent!!.decodeToString())
                 .startsWith("<!DOCTYPE html>")
         }
-        val html = loginPageResult.responseBodyContent!!.decodeToString()
-        val startIndex = html.indexOf("<input type=\"hidden\" name=\"_csrf\"")
-        val endIndex = html.indexOf(">", startIndex)
-        var csrfValue = ""
-        if (startIndex != -1 && endIndex != -1) {
-            val csrfInput = html.substring(startIndex, endIndex)
-
-            val valueStart = csrfInput.indexOf("value=")
-            if (valueStart != -1) {
-                var valueEnd = csrfInput.indexOf("\"", valueStart + 7) // Length of "value=\""
-
-                if (valueEnd != -1) {
-                    csrfValue = csrfInput.substring(valueStart + 7, valueEnd)
-                }
-            }
-        }
         val authData = LinkedMultiValueMap<String, String>().apply {
             add("username", "user")
             add("password", "user")
-            add("_csrf", csrfValue)
         }
         rest
-//            .mutateWith(csrf)
             .post()
             .uri("https://trajano.net/login")
             .headers {
@@ -185,8 +159,7 @@ class FormLoginTests {
             }
             .body(BodyInserters.fromFormData(authData))
             .exchange()
-            //.expectStatus().isTemporaryRedirect
-            .expectStatus().is3xxRedirection
+            .expectStatus().isSeeOther
             .expectHeader().location("https://trajano.net/visualizer")
 
 
@@ -199,10 +172,9 @@ class FormLoginTests {
             // add Spring Security test Support
             .apply(SecurityMockServerConfigurers.springSecurity())
             .configureClient()
-//            .filter(SecurityMockServerConfigurers.b)
-//
-//            .filter(basicAuthentication("user", "password"))
+            .filter(CookieManager())
             .build()
+            .mutateWith(SecurityMockServerConfigurers.csrf())
         val accessProtectedPageResult = rest.get().uri("https://trajano.net/visualizer")
             .headers {
                 it["x-forwarded-proto"] = "https"
@@ -245,12 +217,12 @@ class FormLoginTests {
             }
             .body(BodyInserters.fromFormData(authData))
             .exchange()
-            //.expectStatus().isTemporaryRedirect
-            .expectStatus().is3xxRedirection
+            .expectStatus().isSeeOther
             .returnResult(String::class.java)
         badLoginResult.assertWithDiagnostics {
             assertThat(badLoginResult.responseHeaders.location)
                 .hasPath("/login")
+                .isEqualTo("https://trajano.net/login?error")
         }
 
     }
