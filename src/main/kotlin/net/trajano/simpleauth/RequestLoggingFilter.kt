@@ -96,7 +96,9 @@ class RequestHeaderLoggingFilter {
             .requestCache {
                 it.requestCache(requestCache)
             }
-            .oauth2Login(withDefaults())
+            .oauth2Login{
+                it.authorizationRedirectStrategy(forwardHeadersRedirectStrategy)
+            }
             .httpBasic(withDefaults())
             .formLogin {
                 it.loginPage("/login")
