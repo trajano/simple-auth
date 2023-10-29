@@ -1,9 +1,14 @@
 package net.trajano.simpleauth
 
-import io.micrometer.tracing.TraceContext
+import brave.Tracing
+import io.lettuce.core.resource.ClientResources
+import io.lettuce.core.resource.DefaultClientResources
+import io.lettuce.core.tracing.BraveTracing
 import io.micrometer.tracing.Tracer
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
+import org.springframework.data.redis.connection.RedisConnectionFactory
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpMethod
 import org.springframework.security.authentication.UserDetailsRepositoryReactiveAuthenticationManager
@@ -17,8 +22,7 @@ import org.springframework.security.web.server.authentication.RedirectServerAuth
 import org.springframework.security.web.server.savedrequest.WebSessionServerRequestCache
 import org.springframework.security.web.server.ui.LoginPageGeneratingWebFilter
 import org.springframework.security.web.server.ui.LogoutPageGeneratingWebFilter
-import org.springframework.web.server.WebFilter
-import reactor.core.publisher.Mono
+
 
 @Configuration
 //@EnableRedisWebSession
@@ -59,20 +63,23 @@ class RequestHeaderLoggingFilter {
         return http
             .addFilterAt(loginPageGeneratingWebFilter, SecurityWebFiltersOrder.LOGIN_PAGE_GENERATING)
             .addFilterAt(LogoutPageGeneratingWebFilter(), SecurityWebFiltersOrder.LOGOUT_PAGE_GENERATING)
-            .addFilterAfter({ exchange, chain ->
-                val headers: HttpHeaders = exchange.response.headers
-                val currentSpan = tracer.currentSpan()
-                if (currentSpan != null) {
-                    headers.add(
-                        "traceparent",
-                        "00-${currentSpan.context().traceId()}-${
-                            currentSpan.context().spanId()
-                        }-01"
-                    )
+            .addFilterAfter(
+                { exchange, chain ->
+                    val headers: HttpHeaders = exchange.response.headers
+                    val currentSpan = tracer.currentSpan()
+                    if (currentSpan != null) {
+                        headers.add(
+                            "traceparent",
+                            "00-${currentSpan.context().traceId()}-${
+                                currentSpan.context().spanId()
+                            }-01"
+                        )
 
-                }
-                chain.filter(exchange)
-            }, SecurityWebFiltersOrder.LAST)
+                    }
+                    chain.filter(exchange)
+                },
+                SecurityWebFiltersOrder.LAST
+            )
             .authenticationManager(reactiveAuthenticationManager)
             .authorizeExchange { exchanges ->
                 exchanges.pathMatchers(HttpMethod.GET, "/actuator/health").hasIpAddress("127.0.0.1")
@@ -86,8 +93,8 @@ class RequestHeaderLoggingFilter {
             }
             .httpBasic(withDefaults())
             .formLogin {
-                it.authenticationFailureHandler(authenticationFailureHandler)
                 it.loginPage("/login")
+                it.authenticationFailureHandler(authenticationFailureHandler)
                 it.authenticationSuccessHandler(authenticationSuccessHandler)
                 it.authenticationEntryPoint(authenticationEntryPoint)
             }
@@ -109,14 +116,22 @@ class RequestHeaderLoggingFilter {
 //            chain.filter(exchange)
 //
 //        }
+//
+//    fun logRequestHeaders(tracer: Tracer): WebFilter {
+//        return WebFilter { exchange, chain ->
+//            val requestHeaders = exchange.request.headers
+//            println(tracer)
+//            println(tracer.currentTraceContext())
+//            println(tracer.currentSpan())
+//            chain.filter(exchange)
+//        }
+//    }
 
-    fun logRequestHeaders(tracer: Tracer): WebFilter {
-        return WebFilter { exchange, chain ->
-            val requestHeaders = exchange.request.headers
-            println(tracer)
-            println(tracer.currentTraceContext())
-            println(tracer.currentSpan())
-            chain.filter(exchange)
-        }
-    }
+    @Bean(destroyMethod = "shutdown")
+    @ConditionalOnBean(value = [RedisConnectionFactory::class])
+    fun lettuceClientResources(tracing: Tracing): ClientResources =
+        DefaultClientResources.builder()
+            .tracing(BraveTracing.create(tracing))
+            .build()
+
 }
