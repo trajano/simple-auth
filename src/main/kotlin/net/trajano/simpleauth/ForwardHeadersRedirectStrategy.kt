@@ -19,7 +19,7 @@ class ForwardHeadersRedirectStrategy : ServerRedirectStrategy {
 
     private fun createLocation(exchange: ServerWebExchange, location: URI): URI {
         val url = location.toASCIIString()
-        if (url.startsWith("/")) {
+        if (url.startsWith("/") && exchange.request.headers["x-forwarded-proto"] != null) {
             val context = exchange.request.path.contextPath().value()
             val forwardedProto = exchange.request.headers["x-forwarded-proto"]!![0]
             var forwardedPort = exchange.request.headers["x-forwarded-port"]!![0]

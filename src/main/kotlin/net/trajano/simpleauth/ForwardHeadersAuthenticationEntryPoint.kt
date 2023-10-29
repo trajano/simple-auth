@@ -22,8 +22,8 @@ class ForwardHeadersAuthenticationEntryPoint : ServerAuthenticationEntryPoint {
                 exchange.mutate()
                     .request(
                         exchange.request.mutate()
-                            .method(HttpMethod.valueOf(exchange.request.headers["x-forwarded-method"]!!.first()))
-                            .path(exchange.request.headers["X-Forwarded-Uri"]!!.first())
+                            .method(HttpMethod.valueOf(exchange.request.headers["x-forwarded-method"]?.first() ?: "GET"))
+                            .path(exchange.request.headers["X-Forwarded-Uri"]?.first() ?: "/")
                             .build()
                     )
                     .build()

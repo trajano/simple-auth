@@ -1,5 +1,6 @@
 package net.trajano.simpleauth
 
+import io.micrometer.tracing.TraceContext
 import io.micrometer.tracing.Tracer
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
@@ -9,19 +10,15 @@ import org.springframework.security.authentication.UserDetailsRepositoryReactive
 import org.springframework.security.config.Customizer.withDefaults
 import org.springframework.security.config.web.server.SecurityWebFiltersOrder
 import org.springframework.security.config.web.server.ServerHttpSecurity
-import org.springframework.security.core.userdetails.MapReactiveUserDetailsService
 import org.springframework.security.core.userdetails.ReactiveUserDetailsService
-import org.springframework.security.core.userdetails.User
 import org.springframework.security.web.server.SecurityWebFilterChain
 import org.springframework.security.web.server.authentication.RedirectServerAuthenticationFailureHandler
 import org.springframework.security.web.server.authentication.RedirectServerAuthenticationSuccessHandler
 import org.springframework.security.web.server.savedrequest.WebSessionServerRequestCache
 import org.springframework.security.web.server.ui.LoginPageGeneratingWebFilter
 import org.springframework.security.web.server.ui.LogoutPageGeneratingWebFilter
-import org.springframework.session.data.redis.config.annotation.web.server.EnableRedisWebSession
-import org.springframework.web.server.ServerWebExchange
 import org.springframework.web.server.WebFilter
-import org.springframework.web.server.WebFilterChain
+import reactor.core.publisher.Mono
 
 @Configuration
 //@EnableRedisWebSession
@@ -62,7 +59,7 @@ class RequestHeaderLoggingFilter {
         return http
             .addFilterAt(loginPageGeneratingWebFilter, SecurityWebFiltersOrder.LOGIN_PAGE_GENERATING)
             .addFilterAt(LogoutPageGeneratingWebFilter(), SecurityWebFiltersOrder.LOGOUT_PAGE_GENERATING)
-            .addFilterBefore({ exchange, chain ->
+            .addFilterAfter({ exchange, chain ->
                 val headers: HttpHeaders = exchange.response.headers
                 val currentSpan = tracer.currentSpan()
                 if (currentSpan != null) {
@@ -72,9 +69,10 @@ class RequestHeaderLoggingFilter {
                             currentSpan.context().spanId()
                         }-01"
                     )
+
                 }
                 chain.filter(exchange)
-            }, SecurityWebFiltersOrder.HTTP_HEADERS_WRITER)
+            }, SecurityWebFiltersOrder.LAST)
             .authenticationManager(reactiveAuthenticationManager)
             .authorizeExchange { exchanges ->
                 exchanges.pathMatchers(HttpMethod.GET, "/actuator/health").hasIpAddress("127.0.0.1")
@@ -109,12 +107,13 @@ class RequestHeaderLoggingFilter {
 //
 //        }
 
-//    @Bean
-//    fun logRequestHeaders(): WebFilter {
-//        return WebFilter { exchange, chain ->
-//            val requestHeaders = exchange.request.headers
-//            logHeaders(requestHeaders)
-//            chain.filter(exchange)
-//        }
-//    }
+    fun logRequestHeaders(tracer: Tracer): WebFilter {
+        return WebFilter { exchange, chain ->
+            val requestHeaders = exchange.request.headers
+            println(tracer)
+            println(tracer.currentTraceContext())
+            println(tracer.currentSpan())
+            chain.filter(exchange)
+        }
+    }
 }

@@ -1,5 +1,7 @@
 package net.trajano.simpleauth
 
+import io.micrometer.tracing.Tracer
+import io.micrometer.tracing.annotation.NewSpan
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
@@ -53,6 +55,9 @@ class FormLoginTests {
     private lateinit var context: ApplicationContext
 
     private lateinit var rest: WebTestClient
+
+    @Autowired
+    lateinit var tracer: Tracer
 
     @Autowired
     private lateinit var userDetailsService: ReactiveUserDetailsService
@@ -130,7 +135,24 @@ class FormLoginTests {
     }
 
     @Test
+    @NewSpan
+    fun `tracing`() {
+        tracer.nextSpan()
+
+        val currentTraceContext = tracer.currentTraceContext()
+        assertThat(currentTraceContext.context())
+            .isNotNull
+
+//        currentTraceContext.wrap(Runnable {
+            println("+" + currentTraceContext.context()?.traceId())
+//        }
+
+        println("A")
+    }
+
+    @Test
     fun `happy path`() {
+        tracer.startScopedSpan("testing")
         val cookieManager = CookieManager()
         this.rest = WebTestClient
             .bindToApplicationContext(this.context)
@@ -185,13 +207,14 @@ class FormLoginTests {
             .expectStatus().isSeeOther
             .returnResult(String::class.java)
         authenticatedResult.assertWithDiagnostics {
-assertThat(authenticatedResult.responseHeaders).containsKey("traceparent")
-            .expectHeader().location("https://trajano.net/visualizer")
+            assertThat(authenticatedResult.responseHeaders).containsKey("traceparent")
+            assertThat(authenticatedResult.responseHeaders.location)
+                .hasToString("https://trajano.net/visualizer")
+            println(authenticatedResult.responseHeaders)
 
         }
-
-
     }
+
 
     @Test
     fun `bad password`() {
