@@ -7,7 +7,6 @@ import io.micrometer.tracing.Tracer
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.data.redis.connection.lettuce.observability.MicrometerTracingAdapter
-import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpMethod
 import org.springframework.security.authentication.UserDetailsRepositoryReactiveAuthenticationManager
 import org.springframework.security.config.web.server.SecurityWebFiltersOrder
@@ -65,21 +64,28 @@ class RequestHeaderLoggingFilter {
             .addFilterAt(LogoutPageGeneratingWebFilter(), SecurityWebFiltersOrder.LOGOUT_PAGE_GENERATING)
             .addFilterAfter(
                 { exchange, chain ->
-                    val headers: HttpHeaders = exchange.response.headers
-                    val currentSpan = tracer.currentSpan()
-                    if (currentSpan != null) {
-                        headers.add(
-                            "traceparent",
-                            "00-${currentSpan.context().traceId()}-${
-                                currentSpan.context().spanId()
-                            }-01"
-                        )
-
-                    }
+                    println(exchange.attributes)
                     chain.filter(exchange)
                 },
-                SecurityWebFiltersOrder.LAST
+                SecurityWebFiltersOrder.AUTHORIZATION
             )
+//            .addFilterAfter(
+//                { exchange, chain ->
+//                    val headers: HttpHeaders = exchange.response.headers
+//                    val currentSpan = tracer.currentSpan()
+//                    if (currentSpan != null) {
+//                        headers.add(
+//                            "traceparent",
+//                            "00-${currentSpan.context().traceId()}-${
+//                                currentSpan.context().spanId()
+//                            }-01"
+//                        )
+//
+//                    }
+//                    chain.filter(exchange)
+//                },
+//                SecurityWebFiltersOrder.LAST
+//            )
             .authenticationManager(authenticationManager)
             .authorizeExchange { exchanges ->
                 exchanges.pathMatchers(HttpMethod.GET, "/actuator/health").hasIpAddress("127.0.0.1")
@@ -91,7 +97,7 @@ class RequestHeaderLoggingFilter {
             .requestCache {
                 it.requestCache(requestCache)
             }
-            .oauth2Login{
+            .oauth2Login {
                 it.authorizationRedirectStrategy(forwardHeadersRedirectStrategy)
             }
             .httpBasic {
@@ -134,8 +140,9 @@ class RequestHeaderLoggingFilter {
 //    }
 
     @Bean(destroyMethod = "shutdown")
-    fun lettuceClientResources(observationRegistry: ObservationRegistry): ClientResources = DefaultClientResources.builder()
-        .tracing(MicrometerTracingAdapter(observationRegistry, "redis"))
-        .build()
+    fun lettuceClientResources(observationRegistry: ObservationRegistry): ClientResources =
+        DefaultClientResources.builder()
+            .tracing(MicrometerTracingAdapter(observationRegistry, "redis"))
+            .build()
 
 }
