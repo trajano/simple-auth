@@ -14,12 +14,16 @@ import org.springframework.security.config.Customizer.withDefaults
 import org.springframework.security.config.web.server.SecurityWebFiltersOrder
 import org.springframework.security.config.web.server.ServerHttpSecurity
 import org.springframework.security.core.userdetails.ReactiveUserDetailsService
+import org.springframework.security.oauth2.client.registration.ClientRegistration
+import org.springframework.security.oauth2.client.registration.ReactiveClientRegistrationRepository
+import org.springframework.security.oauth2.core.AuthorizationGrantType
 import org.springframework.security.web.server.SecurityWebFilterChain
 import org.springframework.security.web.server.authentication.RedirectServerAuthenticationFailureHandler
 import org.springframework.security.web.server.authentication.RedirectServerAuthenticationSuccessHandler
 import org.springframework.security.web.server.savedrequest.WebSessionServerRequestCache
 import org.springframework.security.web.server.ui.LoginPageGeneratingWebFilter
 import org.springframework.security.web.server.ui.LogoutPageGeneratingWebFilter
+import java.util.function.Consumer
 
 
 @Configuration
@@ -57,6 +61,9 @@ class RequestHeaderLoggingFilter {
 
         val loginPageGeneratingWebFilter = LoginPageGeneratingWebFilter()
         loginPageGeneratingWebFilter.setFormLoginEnabled(true)
+        loginPageGeneratingWebFilter.setOauth2AuthenticationUrlToClientName(
+            mapOf("/oauth2/authorization/google" to "google")
+        )
 
         return http
             .addFilterAt(loginPageGeneratingWebFilter, SecurityWebFiltersOrder.LOGIN_PAGE_GENERATING)
@@ -89,6 +96,7 @@ class RequestHeaderLoggingFilter {
             .requestCache {
                 it.requestCache(requestCache)
             }
+            .oauth2Login(withDefaults())
             .httpBasic(withDefaults())
             .formLogin {
                 it.loginPage("/login")
@@ -96,6 +104,7 @@ class RequestHeaderLoggingFilter {
                 it.authenticationSuccessHandler(authenticationSuccessHandler)
                 it.authenticationEntryPoint(authenticationEntryPoint)
             }
+            //.rememberMe(withDefaults())
             .build()
     }
 

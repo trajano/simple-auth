@@ -13,6 +13,7 @@ import org.springframework.http.ResponseCookie
 import org.springframework.security.authentication.UserDetailsRepositoryReactiveAuthenticationManager
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
 import org.springframework.security.core.userdetails.ReactiveUserDetailsService
+import org.springframework.security.oauth2.client.registration.ReactiveClientRegistrationRepository
 import org.springframework.security.test.web.reactive.server.SecurityMockServerConfigurers
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.web.reactive.server.WebTestClient
@@ -53,6 +54,9 @@ class FormLoginTests {
 
     @Autowired
     private lateinit var context: ApplicationContext
+
+    @Autowired
+    private lateinit var clientRegistrationRepository: ReactiveClientRegistrationRepository
 
     private lateinit var rest: WebTestClient
 
@@ -135,19 +139,18 @@ class FormLoginTests {
     }
 
     @Test
-    @NewSpan
     fun `tracing`() {
-        tracer.nextSpan()
-
         val currentTraceContext = tracer.currentTraceContext()
         assertThat(currentTraceContext.context())
             .isNotNull
 
-//        currentTraceContext.wrap(Runnable {
-            println("+" + currentTraceContext.context()?.traceId())
-//        }
+    }
 
-        println("A")
+    @Test
+    fun `clientRegistration`() {
+        StepVerifier.create(clientRegistrationRepository.findByRegistrationId("google"))
+            .expectNextMatches { true }
+            .verifyComplete()
     }
 
     @Test
@@ -188,8 +191,10 @@ class FormLoginTests {
             .expectStatus().isOk
             .returnResult(String::class.java)
         loginPageResult.assertWithDiagnostics {
-            assertThat(loginPageResult.responseBodyContent!!.decodeToString())
+            val content = loginPageResult.responseBodyContent!!.decodeToString()
+            assertThat(content)
                 .startsWith("<!DOCTYPE html>")
+                .contains("oauth2/authorization/google")
         }
         val authData = LinkedMultiValueMap<String, String>().apply {
             add("username", "user")
