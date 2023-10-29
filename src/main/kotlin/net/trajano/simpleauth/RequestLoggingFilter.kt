@@ -1,14 +1,12 @@
 package net.trajano.simpleauth
 
-import brave.Tracing
 import io.lettuce.core.resource.ClientResources
 import io.lettuce.core.resource.DefaultClientResources
-import io.lettuce.core.tracing.BraveTracing
+import io.micrometer.observation.ObservationRegistry
 import io.micrometer.tracing.Tracer
-import org.springframework.boot.autoconfigure.condition.ConditionalOnBean
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
-import org.springframework.data.redis.connection.RedisConnectionFactory
+import org.springframework.data.redis.connection.lettuce.observability.MicrometerTracingAdapter
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpMethod
 import org.springframework.security.authentication.UserDetailsRepositoryReactiveAuthenticationManager
@@ -128,10 +126,8 @@ class RequestHeaderLoggingFilter {
 //    }
 
     @Bean(destroyMethod = "shutdown")
-    @ConditionalOnBean(value = [RedisConnectionFactory::class])
-    fun lettuceClientResources(tracing: Tracing): ClientResources =
-        DefaultClientResources.builder()
-            .tracing(BraveTracing.create(tracing))
-            .build()
+    fun lettuceClientResources(x: ObservationRegistry): ClientResources = DefaultClientResources.builder()
+        .tracing(MicrometerTracingAdapter(x, "redis"))
+        .build()
 
 }
