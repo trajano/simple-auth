@@ -10,20 +10,15 @@ import org.springframework.data.redis.connection.lettuce.observability.Micromete
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpMethod
 import org.springframework.security.authentication.UserDetailsRepositoryReactiveAuthenticationManager
-import org.springframework.security.config.Customizer.withDefaults
 import org.springframework.security.config.web.server.SecurityWebFiltersOrder
 import org.springframework.security.config.web.server.ServerHttpSecurity
 import org.springframework.security.core.userdetails.ReactiveUserDetailsService
-import org.springframework.security.oauth2.client.registration.ClientRegistration
-import org.springframework.security.oauth2.client.registration.ReactiveClientRegistrationRepository
-import org.springframework.security.oauth2.core.AuthorizationGrantType
 import org.springframework.security.web.server.SecurityWebFilterChain
 import org.springframework.security.web.server.authentication.RedirectServerAuthenticationFailureHandler
 import org.springframework.security.web.server.authentication.RedirectServerAuthenticationSuccessHandler
 import org.springframework.security.web.server.savedrequest.WebSessionServerRequestCache
 import org.springframework.security.web.server.ui.LoginPageGeneratingWebFilter
 import org.springframework.security.web.server.ui.LogoutPageGeneratingWebFilter
-import java.util.function.Consumer
 
 
 @Configuration
@@ -45,7 +40,7 @@ class RequestHeaderLoggingFilter {
         userDetailsService: ReactiveUserDetailsService,
         tracer: Tracer
     ): SecurityWebFilterChain {
-        val reactiveAuthenticationManager = UserDetailsRepositoryReactiveAuthenticationManager(userDetailsService)
+        val authenticationManager = UserDetailsRepositoryReactiveAuthenticationManager(userDetailsService)
 
         val requestCache = WebSessionServerRequestCache()
         val forwardHeadersRedirectStrategy = ForwardHeadersRedirectStrategy()
@@ -85,7 +80,7 @@ class RequestHeaderLoggingFilter {
                 },
                 SecurityWebFiltersOrder.LAST
             )
-            .authenticationManager(reactiveAuthenticationManager)
+            .authenticationManager(authenticationManager)
             .authorizeExchange { exchanges ->
                 exchanges.pathMatchers(HttpMethod.GET, "/actuator/health").hasIpAddress("127.0.0.1")
             }
@@ -99,7 +94,9 @@ class RequestHeaderLoggingFilter {
             .oauth2Login{
                 it.authorizationRedirectStrategy(forwardHeadersRedirectStrategy)
             }
-            .httpBasic(withDefaults())
+            .httpBasic {
+                it.authenticationManager(authenticationManager)
+            }
             .formLogin {
                 it.loginPage("/login")
                 it.authenticationFailureHandler(authenticationFailureHandler)
