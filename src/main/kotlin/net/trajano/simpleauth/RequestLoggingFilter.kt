@@ -64,10 +64,15 @@ class RequestHeaderLoggingFilter {
             .addFilterAt(LogoutPageGeneratingWebFilter(), SecurityWebFiltersOrder.LOGOUT_PAGE_GENERATING)
             .addFilterBefore({ exchange, chain ->
                 val headers: HttpHeaders = exchange.response.headers
-                headers.add(
-                    "traceparent",
-                    "00-${tracer.currentSpan()!!.context().traceId()}-${tracer.currentSpan()!!.context().spanId()}-01"
-                )
+                val currentSpan = tracer.currentSpan()
+                if (currentSpan != null) {
+                    headers.add(
+                        "traceparent",
+                        "00-${currentSpan.context().traceId()}-${
+                            currentSpan.context().spanId()
+                        }-01"
+                    )
+                }
                 chain.filter(exchange)
             }, SecurityWebFiltersOrder.HTTP_HEADERS_WRITER)
             .authenticationManager(reactiveAuthenticationManager)

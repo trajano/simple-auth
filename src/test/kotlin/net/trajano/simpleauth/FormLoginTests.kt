@@ -173,7 +173,8 @@ class FormLoginTests {
             add("username", "user")
             add("password", "user")
         }
-        rest
+
+        val authenticatedResult = rest
             .post()
             .uri("https://trajano.net/login")
             .headers {
@@ -182,8 +183,12 @@ class FormLoginTests {
             .body(BodyInserters.fromFormData(authData))
             .exchange()
             .expectStatus().isSeeOther
-            .expectHeader().exists("traceparent")
+            .returnResult(String::class.java)
+        authenticatedResult.assertWithDiagnostics {
+assertThat(authenticatedResult.responseHeaders).containsKey("traceparent")
             .expectHeader().location("https://trajano.net/visualizer")
+
+        }
 
 
     }
