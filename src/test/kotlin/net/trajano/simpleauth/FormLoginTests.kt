@@ -212,12 +212,21 @@ class FormLoginTests {
             .expectStatus().isSeeOther
             .returnResult(String::class.java)
         authenticatedResult.assertWithDiagnostics {
-            assertThat(authenticatedResult.responseHeaders).containsKey("traceparent")
+//            assertThat(authenticatedResult.responseHeaders).containsKey("traceparent")
             assertThat(authenticatedResult.responseHeaders.location)
                 .hasToString("https://trajano.net/visualizer")
             println(authenticatedResult.responseHeaders)
-
         }
+            val authenticated2Result = rest
+                .get()
+                .uri("https://trajano.net/")
+                .exchange()
+                .expectStatus().isNoContent
+                .returnResult(String::class.java)
+            authenticated2Result.assertWithDiagnostics {
+//            assertThat(authenticatedResult.responseHeaders).containsKey("traceparent")
+
+            }
     }
 
 

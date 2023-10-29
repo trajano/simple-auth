@@ -62,13 +62,15 @@ class RequestHeaderLoggingFilter {
         return http
             .addFilterAt(loginPageGeneratingWebFilter, SecurityWebFiltersOrder.LOGIN_PAGE_GENERATING)
             .addFilterAt(LogoutPageGeneratingWebFilter(), SecurityWebFiltersOrder.LOGOUT_PAGE_GENERATING)
-            .addFilterAfter(
-                { exchange, chain ->
-                    println(exchange.attributes)
-                    chain.filter(exchange)
-                },
-                SecurityWebFiltersOrder.AUTHORIZATION
-            )
+//            .addFilterAfter(
+//                { exchange, chain ->
+//                    println(exchange.request.uri)
+//                    println(exchange.attributes.keys)
+//                    println(exchange.attributes)
+//                    chain.filter(exchange)
+//                },
+//                SecurityWebFiltersOrder.HTTP_HEADERS_WRITER
+//            )
 //            .addFilterAfter(
 //                { exchange, chain ->
 //                    val headers: HttpHeaders = exchange.response.headers
