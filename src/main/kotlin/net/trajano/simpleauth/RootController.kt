@@ -23,12 +23,12 @@ class RootController {
     fun login(): String {
         return "login"
     }
-
-    @GetMapping("/whoami")
-    @ResponseBody
-    fun whoAmI(req: ServerHttpRequest): Map<String, Any> {
-        return mapOf("headers" to req.headers)
-    }
-    // = Mono.just(ResponseEntity.status(HttpStatus.NO_CONTENT).build())
+//
+//    @GetMapping("/whoami")
+//    @ResponseBody
+//    fun whoAmI(req: ServerHttpRequest): Map<String, Any> {
+//        return mapOf("headers" to req.headers)
+//    }
+//    // = Mono.just(ResponseEntity.status(HttpStatus.NO_CONTENT).build())
 
 }
