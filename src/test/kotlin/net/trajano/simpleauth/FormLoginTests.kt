@@ -224,6 +224,7 @@ class FormLoginTests {
                 .expectStatus().isNoContent
                 .returnResult(String::class.java)
             authenticated2Result.assertWithDiagnostics {
+                println(authenticated2Result.responseHeaders)
 //            assertThat(authenticatedResult.responseHeaders).containsKey("traceparent")
 
             }

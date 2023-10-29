@@ -3,18 +3,11 @@ package net.trajano.simpleauth
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
-import org.springframework.http.server.reactive.ServerHttpRequest
-import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.security.core.context.ReactiveSecurityContextHolder
-import org.springframework.security.core.context.SecurityContextHolder
-import org.springframework.session.data.redis.config.annotation.web.server.EnableRedisWebSession
 import org.springframework.stereotype.Controller
 import org.springframework.web.bind.annotation.GetMapping
-import org.springframework.web.bind.annotation.ResponseBody
 import org.springframework.web.bind.annotation.ResponseStatus
 import reactor.core.publisher.Mono
-import reactor.kotlin.core.publisher.switchIfEmpty
-import java.security.Principal
 
 @Controller
 class RootController {
@@ -23,9 +16,19 @@ class RootController {
     fun index(): Mono<ResponseEntity<Void>> {
         return ReactiveSecurityContextHolder.getContext()
             .map { it.authentication }
-            .map { ResponseEntity.status(HttpStatus.NO_CONTENT)
-                .header("X-Authentication-To-String", it.toString())
-                .build() }
+            .map {
+                // at this point there would likely be a transformation to provide a proper header for the application
+                // for this simple example we simply output to string and the class name
+                val headers = HttpHeaders()
+                headers["X-Authentication-Class"] = it.javaClass.toString()
+                headers["X-Authentication-To-String"] = it.toString()
+                headers
+            }
+            .map {
+                ResponseEntity.status(HttpStatus.NO_CONTENT)
+                    .headers(it)
+                    .build()
+            }
     }
 
 //    @GetMapping("/login")
