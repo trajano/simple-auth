@@ -33,6 +33,7 @@ dependencies {
 	implementation("org.springframework.session:spring-session-data-redis")
 	implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
 	implementation("io.micrometer:micrometer-tracing-bridge-brave")
+	implementation("io.micrometer:micrometer-registry-prometheus")
 	implementation("io.projectreactor.kotlin:reactor-kotlin-extensions")
 	implementation("io.zipkin.reporter2:zipkin-reporter-brave")
 	implementation("org.jetbrains.kotlin:kotlin-reflect")
