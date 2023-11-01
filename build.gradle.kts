@@ -35,6 +35,7 @@ dependencies {
 //	implementation("io.micrometer:micrometer-tracing-bridge-brave")
 	implementation("io.micrometer:micrometer-registry-prometheus")
 	implementation("io.projectreactor.kotlin:reactor-kotlin-extensions")
+	implementation("io.micrometer:micrometer-tracing")
 	runtimeOnly("io.micrometer:micrometer-tracing-bridge-otel")
 	runtimeOnly("io.opentelemetry:opentelemetry-exporter-otlp")
 //	implementation("io.zipkin.reporter2:zipkin-reporter-brave")
