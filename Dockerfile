@@ -18,5 +18,11 @@ COPY --from=extract --link /w/spring-boot-loader/ /w/
 COPY --from=extract --link /w/application/ /w/
 COPY --from=download-otel-agent /tmp/opentelemetry-javaagent.jar /opentelemetry-javaagent.jar
 WORKDIR /w
-CMD [ "java", "-XX:MinRAMPercentage=60.0", "-XX:MaxRAMPercentage=60.0", "-XshowSettings:vm", "org.springframework.boot.loader.JarLauncher" ]
+CMD [
+    "java",
+    "-XX:InitialRAMPercentage=60.0",
+    "-XX:MaxRAMPercentage=60.0",
+    "-Xshare:off",
+    # "-XshowSettings:vm",
+    "org.springframework.boot.loader.JarLauncher" ]
 HEALTHCHECK CMD wget -O /dev/null http://localhost:8080/actuator/health || exit 1
