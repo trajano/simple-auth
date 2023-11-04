@@ -20,8 +20,8 @@ COPY --from=download-otel-agent /tmp/opentelemetry-javaagent.jar /opentelemetry-
 WORKDIR /w
 CMD [
     "java",
-    "-XX:InitialRAMPercentage=60.0",
-    "-XX:MaxRAMPercentage=60.0",
+    "-XX:InitialRAMPercentage=80.0",
+    "-XX:MaxRAMPercentage=80.0",
     "-Xshare:off",
     # "-XshowSettings:vm",
     "org.springframework.boot.loader.JarLauncher" ]
