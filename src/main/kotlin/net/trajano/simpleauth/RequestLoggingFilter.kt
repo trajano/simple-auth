@@ -3,7 +3,6 @@ package net.trajano.simpleauth
 import io.lettuce.core.resource.ClientResources
 import io.lettuce.core.resource.DefaultClientResources
 import io.micrometer.observation.ObservationRegistry
-import io.micrometer.tracing.Tracer
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.data.redis.connection.lettuce.observability.MicrometerTracingAdapter
@@ -37,7 +36,6 @@ class RequestHeaderLoggingFilter {
     fun springSecurityFilterChain(
         http: ServerHttpSecurity,
         userDetailsService: ReactiveUserDetailsService,
-        tracer: Tracer
     ): SecurityWebFilterChain {
         val authenticationManager = UserDetailsRepositoryReactiveAuthenticationManager(userDetailsService)
 
@@ -100,6 +98,7 @@ class RequestHeaderLoggingFilter {
             }
             .oauth2Login {
                 it.authorizationRedirectStrategy(forwardHeadersRedirectStrategy)
+                it.authenticationFailureHandler(authenticationFailureHandler)
             }
             .httpBasic {
                 it.authenticationManager(authenticationManager)

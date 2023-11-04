@@ -1,7 +1,5 @@
 package net.trajano.simpleauth
 
-import io.micrometer.tracing.Tracer
-import io.micrometer.tracing.annotation.NewSpan
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
@@ -61,9 +59,6 @@ class FormLoginTests {
     private lateinit var rest: WebTestClient
 
     @Autowired
-    lateinit var tracer: Tracer
-
-    @Autowired
     private lateinit var userDetailsService: ReactiveUserDetailsService
 
     @Test
@@ -108,10 +103,11 @@ class FormLoginTests {
             .build()
         val noAuthResult = rest.get().uri("https://trajano.net/")
             .exchange()
-            .expectStatus().isUnauthorized
+            .expectStatus().is3xxRedirection
             .returnResult(String::class.java)
         noAuthResult.assertWithDiagnostics {
-
+            assertThat( noAuthResult.responseHeaders.location)
+                .hasPath("/oauth2/authorization/google")
         }
 
         val badAuthResult = rest.get().uri("https://trajano.net/")
@@ -139,14 +135,6 @@ class FormLoginTests {
     }
 
     @Test
-    fun `tracing`() {
-        val currentTraceContext = tracer.currentTraceContext()
-        assertThat(currentTraceContext.context())
-            .isNotNull
-
-    }
-
-    @Test
     fun `clientRegistration`() {
         StepVerifier.create(clientRegistrationRepository.findByRegistrationId("google"))
             .expectNextMatches { true }
@@ -155,7 +143,6 @@ class FormLoginTests {
 
     @Test
     fun `happy path`() {
-        tracer.startScopedSpan("testing")
         val cookieManager = CookieManager()
         this.rest = WebTestClient
             .bindToApplicationContext(this.context)
