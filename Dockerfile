@@ -23,6 +23,6 @@ CMD [
     "-XX:InitialRAMPercentage=80.0",
     "-XX:MaxRAMPercentage=80.0",
     "-Xshare:off",
-    # "-XshowSettings:vm",
     "org.springframework.boot.loader.JarLauncher" ]
 HEALTHCHECK CMD wget -O /dev/null http://localhost:8080/actuator/health || exit 1
+    # "-XshowSettings:vm",
