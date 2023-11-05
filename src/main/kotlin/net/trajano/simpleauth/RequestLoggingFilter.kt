@@ -90,6 +90,7 @@ class RequestHeaderLoggingFilter {
             .authorizeExchange { exchanges ->
                 exchanges.pathMatchers(HttpMethod.GET, "/actuator/health").hasIpAddress("127.0.0.1")
                 exchanges.pathMatchers(HttpMethod.GET, "/actuator/prometheus").permitAll()
+                exchanges.pathMatchers(HttpMethod.GET, "/whoami3").permitAll()
                 exchanges.pathMatchers(HttpMethod.GET, "/favicon.ico").permitAll()
             }
             .authorizeExchange { exchanges -> exchanges.anyExchange().authenticated() }

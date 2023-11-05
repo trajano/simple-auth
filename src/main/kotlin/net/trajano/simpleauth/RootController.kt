@@ -1,6 +1,5 @@
 package net.trajano.simpleauth
 
-import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus
@@ -17,6 +16,7 @@ class RootController {
     companion object {
         val log = LoggerFactory.getLogger(RootController::class.java)
     }
+
     @GetMapping("/")
     @ResponseStatus(code = HttpStatus.NO_CONTENT)
     fun index(): Mono<ResponseEntity<Void>> {
@@ -37,7 +37,7 @@ class RootController {
             }
     }
 
-//    @GetMapping("/login")
+    //    @GetMapping("/login")
 //    fun login(): String {
 //        return "login"
 //    }
@@ -46,6 +46,13 @@ class RootController {
     @org.springframework.web.bind.annotation.ResponseBody
     fun whoAmI(req: ServerHttpRequest): Map<String, Any> {
         log.info("whomami 2 requested")
+        return mapOf("headers" to req.headers)
+    }
+
+    @GetMapping("/whoami3")
+    @org.springframework.web.bind.annotation.ResponseBody
+    fun whoAmI3(req: ServerHttpRequest): Map<String, Any> {
+        log.info("whomami 3 requested")
         return mapOf("headers" to req.headers)
     }
 //    // = Mono.just(ResponseEntity.status(HttpStatus.NO_CONTENT).build())
