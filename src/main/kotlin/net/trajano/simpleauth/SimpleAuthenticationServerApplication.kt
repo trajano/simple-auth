@@ -10,6 +10,5 @@ class SimpleAuthenticationServerApplication
 
 fun main(args: Array<String>) {
 	Hooks.enableAutomaticContextPropagation()
-	DefaultClientResources.builder().build()
 	runApplication<SimpleAuthenticationServerApplication>(*args)
 }
