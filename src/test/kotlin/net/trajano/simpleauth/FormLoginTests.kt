@@ -64,9 +64,6 @@ class FormLoginTests {
 
     @Test
     fun `check user details`() {
-        Tracing.disabled()
-        println(ClassLoader.getSystemClassLoader().getResource("io/lettuce/core/tracing/Tracing.class"))
-
         assertThat(userDetailsService)
             .isNotNull()
 
