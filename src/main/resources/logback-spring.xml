@@ -5,7 +5,7 @@
     <appender name="JSON" class="ch.qos.logback.core.ConsoleAppender">
         <encoder class="net.logstash.logback.encoder.LogstashEncoder" />
     </appender>
-    <root level="warn">
+    <root level="INFO">
         <appender-ref ref="${LOGGING_APPENDER:-JSON}"/>
     </root>
     <logger name="nil">
