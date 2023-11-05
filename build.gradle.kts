@@ -38,7 +38,7 @@ dependencies {
 	implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactor")
 
 	implementation("io.micrometer:micrometer-registry-prometheus")
-	implementation("io.micrometer:micrometer-tracing")
+//	implementation("io.micrometer:micrometer-tracing")
 //	runtimeOnly("io.micrometer:micrometer-tracing-bridge-otel")
 //	runtimeOnly("io.opentelemetry:opentelemetry-exporter-otlp")
 
