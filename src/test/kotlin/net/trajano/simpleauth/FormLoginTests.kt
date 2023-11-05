@@ -1,5 +1,6 @@
 package net.trajano.simpleauth
 
+import io.lettuce.core.tracing.Tracing
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
@@ -63,6 +64,9 @@ class FormLoginTests {
 
     @Test
     fun `check user details`() {
+        Tracing.disabled()
+        println(ClassLoader.getSystemClassLoader().getResource("io/lettuce/core/tracing/Tracing.class"))
+
         assertThat(userDetailsService)
             .isNotNull()
 
