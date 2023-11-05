@@ -2,7 +2,7 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
 
-	id("org.springframework.boot") version "3.1.5"
+	id("org.springframework.boot") version "3.1.6-SNAPSHOT"
 	id("io.spring.dependency-management") version "1.1.3"
 	kotlin("jvm") version "1.8.22"
 	kotlin("plugin.spring") version "1.8.22"
@@ -21,6 +21,7 @@ java {
 repositories {
 	mavenCentral()
 	maven { url = uri("https://repo.spring.io/milestone") }
+	maven { url = uri("https://repo.spring.io/snapshot") }
 }
 
 dependencies {
@@ -44,12 +45,7 @@ dependencies {
 
 //	runtimeOnly("io.opentelemetry.instrumentation:opentelemetry-lettuce-5.1:1.31.0-alpha")
 
-	runtimeOnly("org.springframework.boot:spring-boot-starter-log4j2")
-	modules {
-		module("org.springframework.boot:spring-boot-starter-logging") {
-			replacedBy("org.springframework.boot:spring-boot-starter-log4j2", "Use Log4j2 instead of Logback")
-		}
-	}
+	runtimeOnly("net.logstash.logback:logstash-logback-encoder:7.4")
 
 	developmentOnly("org.springframework.boot:spring-boot-devtools")
 	developmentOnly("org.springframework.boot:spring-boot-docker-compose")
