@@ -44,6 +44,13 @@ dependencies {
 
 //	runtimeOnly("io.opentelemetry.instrumentation:opentelemetry-lettuce-5.1:1.31.0-alpha")
 
+	runtimeOnly("org.springframework.boot:spring-boot-starter-log4j2")
+	modules {
+		module("org.springframework.boot:spring-boot-starter-logging") {
+			replacedBy("org.springframework.boot:spring-boot-starter-log4j2", "Use Log4j2 instead of Logback")
+		}
+	}
+
 	developmentOnly("org.springframework.boot:spring-boot-devtools")
 	developmentOnly("org.springframework.boot:spring-boot-docker-compose")
 
