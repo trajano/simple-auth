@@ -140,10 +140,4 @@ class RequestHeaderLoggingFilter {
 //        }
 //    }
 
-    @Bean(destroyMethod = "shutdown")
-    fun lettuceClientResources(observationRegistry: ObservationRegistry): ClientResources =
-        DefaultClientResources.builder()
-            .tracing(MicrometerTracingAdapter(observationRegistry, "redis"))
-            .build()
-
 }
