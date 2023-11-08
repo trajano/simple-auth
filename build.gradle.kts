@@ -39,14 +39,8 @@ dependencies {
 	implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactor")
 
 	implementation("io.micrometer:micrometer-registry-prometheus")
-//	implementation("io.micrometer:micrometer-tracing")
-//	runtimeOnly("io.micrometer:micrometer-tracing-bridge-otel")
-//	runtimeOnly("io.opentelemetry:opentelemetry-exporter-otlp")
-
-//	runtimeOnly("io.opentelemetry.instrumentation:opentelemetry-lettuce-5.1:1.31.0-alpha")
 
 	runtimeOnly("net.logstash.logback:logstash-logback-encoder:7.4")
-	runtimeOnly("io.opentelemetry.instrumentation:opentelemetry-logback-appender-1.0:1.31.0-alpha")
 
 	developmentOnly("org.springframework.boot:spring-boot-devtools")
 	developmentOnly("org.springframework.boot:spring-boot-docker-compose")
