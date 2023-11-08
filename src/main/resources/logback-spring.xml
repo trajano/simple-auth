@@ -7,7 +7,6 @@
     </appender>
     <root level="${LOGGING_LEVEL_ROOT:-INFO}">
         <appender-ref ref="${LOGGING_APPENDER:-JSON}"/>
-        <appender-ref ref="OpenTelemetry"/>
     </root>
     <logger name="nil">
         <appender-ref ref="CONSOLE"/>
