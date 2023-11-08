@@ -46,6 +46,7 @@ dependencies {
 //	runtimeOnly("io.opentelemetry.instrumentation:opentelemetry-lettuce-5.1:1.31.0-alpha")
 
 	runtimeOnly("net.logstash.logback:logstash-logback-encoder:7.4")
+	runtimeOnly("io.opentelemetry.instrumentation:opentelemetry-logback-appender-1.0:1.31.0-alpha")
 
 	developmentOnly("org.springframework.boot:spring-boot-devtools")
 	developmentOnly("org.springframework.boot:spring-boot-docker-compose")

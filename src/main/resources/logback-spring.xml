@@ -5,8 +5,12 @@
     <appender name="JSON" class="ch.qos.logback.core.ConsoleAppender">
         <encoder class="net.logstash.logback.encoder.LogstashEncoder" />
     </appender>
+    <appender name="OTEL"
+              class="io.opentelemetry.instrumentation.logback.appender.v1_0.OpenTelemetryAppender">
+    </appender>
     <root level="${LOGGING_LEVEL_ROOT:-INFO}">
         <appender-ref ref="${LOGGING_APPENDER:-JSON}"/>
+        <appender-ref ref="OTEL"/>
     </root>
     <logger name="nil">
         <appender-ref ref="CONSOLE"/>
