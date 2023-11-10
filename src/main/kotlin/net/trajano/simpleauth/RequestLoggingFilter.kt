@@ -1,11 +1,8 @@
 package net.trajano.simpleauth
 
-import io.lettuce.core.resource.ClientResources
-import io.lettuce.core.resource.DefaultClientResources
-import io.micrometer.observation.ObservationRegistry
+import io.micrometer.core.instrument.MeterRegistry
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
-import org.springframework.data.redis.connection.lettuce.observability.MicrometerTracingAdapter
 import org.springframework.http.HttpMethod
 import org.springframework.security.authentication.UserDetailsRepositoryReactiveAuthenticationManager
 import org.springframework.security.config.web.server.SecurityWebFiltersOrder
@@ -36,6 +33,7 @@ class RequestHeaderLoggingFilter {
     fun springSecurityFilterChain(
         http: ServerHttpSecurity,
         userDetailsService: ReactiveUserDetailsService,
+        meterRegistry: MeterRegistry
     ): SecurityWebFilterChain {
         val authenticationManager = UserDetailsRepositoryReactiveAuthenticationManager(userDetailsService)
 
@@ -60,6 +58,12 @@ class RequestHeaderLoggingFilter {
         return http
             .addFilterAt(loginPageGeneratingWebFilter, SecurityWebFiltersOrder.LOGIN_PAGE_GENERATING)
             .addFilterAt(LogoutPageGeneratingWebFilter(), SecurityWebFiltersOrder.LOGOUT_PAGE_GENERATING)
+            .addFilterAfter(
+                { exchange, chain ->
+                    meterRegistry.counter("auth", "logins").increment()
+                    chain.filter(exchange) },
+                SecurityWebFiltersOrder.LOGOUT_PAGE_GENERATING
+            )
 //            .addFilterAfter(
 //                { exchange, chain ->
 //                    println(exchange.request.uri)
