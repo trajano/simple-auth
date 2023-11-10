@@ -65,7 +65,7 @@ class RequestHeaderLoggingFilter {
             .addFilterAt(LogoutPageGeneratingWebFilter(), SecurityWebFiltersOrder.LOGOUT_PAGE_GENERATING)
             .addFilterAfter(
                 { exchange, chain ->
-                    log.info("About to use {}", meterRegistry)
+                    log.debug("About to use {}", meterRegistry)
                     meterRegistry.counter("auth.login.success").increment()
                     chain.filter(exchange)
                 },
