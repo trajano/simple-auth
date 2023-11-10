@@ -1,6 +1,7 @@
 package net.trajano.simpleauth
 
 import io.micrometer.core.instrument.MeterRegistry
+import org.slf4j.LoggerFactory
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.http.HttpMethod
@@ -19,6 +20,10 @@ import org.springframework.security.web.server.ui.LogoutPageGeneratingWebFilter
 @Configuration
 //@EnableRedisWebSession
 class RequestHeaderLoggingFilter {
+
+    companion object {
+        val log = LoggerFactory.getLogger(RootController::class.java)
+    }
 
 //    @Bean
 //    fun userDetailsService() = MapReactiveUserDetailsService(
@@ -60,8 +65,10 @@ class RequestHeaderLoggingFilter {
             .addFilterAt(LogoutPageGeneratingWebFilter(), SecurityWebFiltersOrder.LOGOUT_PAGE_GENERATING)
             .addFilterAfter(
                 { exchange, chain ->
+                    log.info("About to use {}", meterRegistry)
                     meterRegistry.counter("auth", "logins").increment()
-                    chain.filter(exchange) },
+                    chain.filter(exchange)
+                },
                 SecurityWebFiltersOrder.LOGOUT_PAGE_GENERATING
             )
 //            .addFilterAfter(
