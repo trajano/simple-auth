@@ -22,7 +22,7 @@ ENTRYPOINT exec java \
   -XX:+ExitOnOutOfMemoryError \
   -Xshare:off \
   $JAVA_OPTS \
-  org.springframework.boot.loader.JarLauncher
+  org.springframework.boot.loader.launch.JarLauncher
 #
 #CMD [ "java", \
 #    "-XX:InitialRAMPercentage=80.0", \
