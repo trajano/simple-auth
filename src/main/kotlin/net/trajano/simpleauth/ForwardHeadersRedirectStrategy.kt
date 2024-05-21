@@ -22,20 +22,16 @@ class ForwardHeadersRedirectStrategy : ServerRedirectStrategy {
         if (url.startsWith("/") && exchange.request.headers["x-forwarded-proto"] != null) {
             val context = exchange.request.path.contextPath().value()
             val forwardedProto = exchange.request.headers["x-forwarded-proto"]!![0]
-            var forwardedPort : String = null
+            var forwardedPort : String? = null
             if (exchange.request.headers["x-forwarded-port"] != null) {
                 forwardedPort = exchange.request.headers["x-forwarded-port"]!![0]
             }
             when {
-                forwardedPort == null -> {
-                    forwardedPort = null;
-                }
-                
-                "https".equals(forwardedProto) && "443".equals(forwardedPort) -> {
+                "https" == forwardedProto && "443" == forwardedPort -> {
                     forwardedPort = null;
                 }
 
-                "http".equals(forwardedProto) && "80".equals(forwardedPort) -> {
+                "http" == forwardedProto && "80" == forwardedPort -> {
                     forwardedPort = null;
                 }
             }
