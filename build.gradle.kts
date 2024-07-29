@@ -40,7 +40,7 @@ dependencies {
 	implementation("org.jetbrains.kotlin:kotlin-reflect")
 	implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactor")
 
-	implementation("io.micrometer:micrometer-registry-prometheus")
+	// implementation("io.micrometer:micrometer-registry-prometheus")
 
 	implementation("io.opentelemetry.instrumentation:opentelemetry-spring-boot-starter")
 
