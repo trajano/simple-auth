@@ -24,9 +24,13 @@ repositories {
 	maven { url = uri("https://repo.spring.io/snapshot") }
 }
 
-dependencies {
-	implementation(platform("io.opentelemetry.instrumentation:opentelemetry-instrumentation-bom:2.6.0"))
+dependencyManagement {
+  imports {
+    mavenBom("io.opentelemetry.instrumentation:opentelemetry-instrumentation-bom:2.6.0")
+  }
+}
 
+dependencies {
 	implementation("org.springframework.boot:spring-boot-starter-actuator")
 	implementation("org.springframework.boot:spring-boot-starter-security")
 	implementation("org.springframework.boot:spring-boot-starter-oauth2-client")
